@@ -72,7 +72,7 @@ require (
 	golang.org/x/mod v0.31.0
 	golang.org/x/oauth2 v0.34.0
 	golang.org/x/text v0.32.0
-	gonum.org/v1/gonum v0.16.0
+	gonum.org/v1/gonum v0.17.0
 	google.golang.org/api v0.257.0
 	google.golang.org/grpc v1.77.0
 	google.golang.org/protobuf v1.36.11
