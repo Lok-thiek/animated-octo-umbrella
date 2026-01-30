@@ -17,7 +17,7 @@ replace github.com/compose-spec/compose-go/v2 => github.com/compose-spec/compose
 require (
 	cuelang.org/go v0.15.1
 	fortio.org/fortio v1.73.0
-	github.com/99designs/gqlgen v0.17.85
+	github.com/99designs/gqlgen v0.17.86
 	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/briandowns/spinner v1.23.2
@@ -71,7 +71,7 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux v0.64.0
 	golang.org/x/mod v0.31.0
 	golang.org/x/oauth2 v0.34.0
-	golang.org/x/text v0.32.0
+	golang.org/x/text v0.33.0
 	gonum.org/v1/gonum v0.16.0
 	google.golang.org/api v0.257.0
 	google.golang.org/grpc v1.77.0
