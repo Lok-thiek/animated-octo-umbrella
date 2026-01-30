@@ -1,0 +1,161 @@
+// Copyright Meshery Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package filter
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/url"
+	"strings"
+
+	"github.com/ghodss/yaml"
+	"github.com/meshery/meshery/mesheryctl/internal/cli/root/config"
+	"github.com/meshery/meshery/mesheryctl/pkg/utils"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+)
+
+var (
+	viewAllFlag   bool
+	outFormatFlag string
+)
+
+var viewCmd = &cobra.Command{
+	Use:   "view",
+	Short: "View filter(s)",
+	Long:  `Displays the contents of a specific filter based on name or id`,
+	Example: `
+// View the specified WASM filter
+// A unique prefix of the name or ID can also be provided. If the prefix is not unique, the first match will be returned.
+mesheryctl filter view "[filter-name | ID]"
+
+// View all filter files
+mesheryctl filter view --all
+
+//View multi-word named filter files. Multi-word filter names should be enclosed in quotes
+mesheryctl filter view "filter name"
+        `,
+	Args: cobra.ArbitraryArgs,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// for formatting errors
+		subCmdUsed := cmd.Use
+
+		mctlCfg, err := config.GetMesheryCtl(viper.GetViper())
+		if err != nil {
+			return utils.ErrLoadConfig(err)
+		}
+
+		filter := ""
+		isID := false
+		var filterArg string
+		// if filter name/id available
+		if len(args) > 0 {
+			if viewAllFlag {
+				return ErrViewAllWithName(subCmdUsed)
+			}
+			fullArg := strings.Join(args, " ")
+
+			// Check if the argument starts and ends with double quotes
+			if strings.HasPrefix(fullArg, "\"") && strings.HasSuffix(fullArg, "\"") {
+				// Remove the quotes and use the entire content
+				filterArg = strings.Trim(fullArg, "\"")
+			} else if len(args) == 1 {
+				// If it's a single word without quotes, use it as is
+				filterArg = args[0]
+			} else {
+				// If multiple words without quotes, return an error
+				return ErrMultiWordFilterName(subCmdUsed)
+			}
+
+			filter, isID, err = utils.ValidId(mctlCfg.GetBaseMesheryURL(), filterArg, "filter")
+			if err != nil {
+				return utils.ErrInvalidNameOrID(err)
+			}
+		}
+
+		urlString := mctlCfg.GetBaseMesheryURL()
+		if len(filter) == 0 {
+			if viewAllFlag {
+				urlString += "/api/filter?pagesize=10000"
+			} else {
+				return utils.ErrInvalidNameOrID(errors.New(errFilterNameOrIDNotProvided))
+			}
+		} else if isID {
+			// if filter is a valid uuid, then directly fetch the filter
+			urlString += "/api/filter/" + filter
+		} else {
+			// else search filter by name
+			urlString += "/api/filter?search=" + url.QueryEscape(filter)
+		}
+
+		req, err := utils.NewRequest("GET", urlString, nil)
+		if err != nil {
+			return utils.ErrCreatingRequest(err)
+		}
+		res, err := utils.MakeRequest(req)
+		if err != nil {
+			return utils.ErrCreatingRequest(err)
+		}
+
+		defer func() { _ = res.Body.Close() }()
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return utils.ErrReadResponseBody(err)
+		}
+
+		var dat map[string]interface{}
+		if err = json.Unmarshal(body, &dat); err != nil {
+			return utils.ErrUnmarshal(err)
+		}
+
+		if isID {
+			if body, err = json.MarshalIndent(dat, "", "  "); err != nil {
+				return utils.ErrMarshalIndent(err)
+			}
+		} else if viewAllFlag {
+			// only keep the filter key from the response when viewing all the filters
+			if body, err = json.MarshalIndent(map[string]interface{}{"filters": dat["filters"]}, "", "  "); err != nil {
+				return utils.ErrMarshalIndent(err)
+			}
+		} else {
+			// use the first match from the result when searching by filter name
+			arr := dat["filters"].([]interface{})
+			if len(arr) == 0 {
+				utils.Log.Info(fmt.Sprintf("filter with name: %s not found", filter))
+				return nil
+			}
+			if body, err = json.MarshalIndent(arr[0], "", "  "); err != nil {
+				return utils.ErrMarshalIndent(err)
+			}
+		}
+
+		if outFormatFlag == "yaml" {
+			if body, err = yaml.JSONToYAML(body); err != nil {
+				return utils.ErrJSONToYAML(err)
+			}
+		} else if outFormatFlag != "json" {
+			return utils.ErrOutFormatFlag()
+		}
+		utils.Log.Info(string(body))
+		return nil
+	},
+}
+
+func init() {
+	viewCmd.Flags().BoolVarP(&viewAllFlag, "all", "a", false, "(optional) view all filters available")
+	viewCmd.Flags().StringVarP(&outFormatFlag, "output-format", "o", "yaml", "(optional) format to display in [json|yaml]")
+}
