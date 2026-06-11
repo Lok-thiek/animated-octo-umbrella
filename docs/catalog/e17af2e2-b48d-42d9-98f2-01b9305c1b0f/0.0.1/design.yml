@@ -6422,7 +6422,7 @@
                     "-ec",
                     "#!/bin/bash\nretry_while() {\n  local -r cmd=\"${1:?cmd is missing}\"\n  local -r retries=\"${2:-12}\"\n  local -r sleep_time=\"${3:-5}\"\n  local return_value=1\n\n  read -r -a command \u003c\u003c\u003c \"$cmd\"\n  for ((i = 1 ; i \u003c= retries ; i+=1 )); do\n      \"${command[@]}\" \u0026\u0026 return_value=0 \u0026\u0026 break\n      sleep \"$sleep_time\"\n  done\n  return $return_value\n}\n\netcd_hosts=(\n  \"http://apisix-etcd:2379\"\n)\n\ncheck_etcd() {\n    local curl_options=()\n\n    local -r etcd_host=\"${1:-?missing etcd}\"\n    if curl \"${curl_options[@]}\" --max-time 5 \"${etcd_host}/version\" | grep etcdcluster; then\n       return 0\n    else\n       return 1\n    fi\n}\n\nfor host in \"${etcd_hosts[@]}\"; do\n    echo \"Checking connection to $host\"\n    if retry_while \"check_etcd $host\"; then\n        echo \"Connected to $host\"\n    else\n        echo \"Error connecting to $host\"\n        exit 1\n    fi\ndone\n\necho \"Connection success\"\nexit 0\n"
                   ],
-                  "image": "docker.io/bitnami/os-shell:12-debian-12-r50",
+                  "image": "docker.io/soldevelo/os-shell:12-debian-12-r2",
                   "imagePullPolicy": "IfNotPresent",
                   "name": "wait-for-etcd",
                   "securityContext": {
@@ -6464,7 +6464,7 @@
                     }
                   ],
                   "envFrom": null,
-                  "image": "docker.io/bitnami/os-shell:12-debian-12-r50",
+                  "image": "docker.io/soldevelo/os-shell:12-debian-12-r2",
                   "imagePullPolicy": "IfNotPresent",
                   "name": "render-conf",
                   "securityContext": {
@@ -6869,7 +6869,7 @@
                     "-ec",
                     "#!/bin/bash\nretry_while() {\n  local -r cmd=\"${1:?cmd is missing}\"\n  local -r retries=\"${2:-12}\"\n  local -r sleep_time=\"${3:-5}\"\n  local return_value=1\n\n  read -r -a command \u003c\u003c\u003c \"$cmd\"\n  for ((i = 1 ; i \u003c= retries ; i+=1 )); do\n      \"${command[@]}\" \u0026\u0026 return_value=0 \u0026\u0026 break\n      sleep \"$sleep_time\"\n  done\n  return $return_value\n}\n\nhost=\"https://apisix-control-plane:9180\"\n\ncheck_control_plane() {\n    if curl --max-time 5 -k -I \"$host\"; then\n       return 0\n    else\n       return 1\n    fi\n}\n\necho \"Checking connection to $host\"\nif retry_while \"check_control_plane\"; then\n    echo \"Connected to $host\"\nelse\n    echo \"Error connecting to $host\"\n    exit 1\nfi\n\necho \"Connection success\"\nexit 0\n"
                   ],
-                  "image": "docker.io/bitnami/os-shell:12-debian-12-r50",
+                  "image": "docker.io/soldevelo/os-shell:12-debian-12-r2",
                   "imagePullPolicy": "IfNotPresent",
                   "name": "wait-for-control-plane",
                   "securityContext": {
@@ -6911,7 +6911,7 @@
                     }
                   ],
                   "envFrom": null,
-                  "image": "docker.io/bitnami/os-shell:12-debian-12-r50",
+                  "image": "docker.io/soldevelo/os-shell:12-debian-12-r2",
                   "imagePullPolicy": "IfNotPresent",
                   "name": "render-conf",
                   "securityContext": {
@@ -7315,7 +7315,7 @@
                     "-ec",
                     "#!/bin/bash\nretry_while() {\n  local -r cmd=\"${1:?cmd is missing}\"\n  local -r retries=\"${2:-12}\"\n  local -r sleep_time=\"${3:-5}\"\n  local return_value=1\n\n  read -r -a command \u003c\u003c\u003c \"$cmd\"\n  for ((i = 1 ; i \u003c= retries ; i+=1 )); do\n      \"${command[@]}\" \u0026\u0026 return_value=0 \u0026\u0026 break\n      sleep \"$sleep_time\"\n  done\n  return $return_value\n}\n\nhost=\"https://apisix-control-plane:9180\"\n\ncheck_control_plane() {\n    if curl --max-time 5 -k -I \"$host\"; then\n       return 0\n    else\n       return 1\n    fi\n}\n\necho \"Checking connection to $host\"\nif retry_while \"check_control_plane\"; then\n    echo \"Connected to $host\"\nelse\n    echo \"Error connecting to $host\"\n    exit 1\nfi\n\necho \"Connection success\"\nexit 0\n"
                   ],
-                  "image": "docker.io/bitnami/os-shell:12-debian-12-r50",
+                  "image": "docker.io/soldevelo/os-shell:12-debian-12-r2",
                   "imagePullPolicy": "IfNotPresent",
                   "name": "wait-for-control-plane",
                   "securityContext": {
@@ -7357,7 +7357,7 @@
                     }
                   ],
                   "envFrom": null,
-                  "image": "docker.io/bitnami/os-shell:12-debian-12-r50",
+                  "image": "docker.io/soldevelo/os-shell:12-debian-12-r2",
                   "imagePullPolicy": "IfNotPresent",
                   "name": "render-conf",
                   "securityContext": {
